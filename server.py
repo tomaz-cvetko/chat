@@ -50,7 +50,11 @@ def broadcast(msg, prefix=""):
     """Broadcasts a message to all other chat participants"""
     print(prefix + msg.decode("utf8"))
     for sock in clients:
-        sock.send(bytes(prefix, "utf8")+msg)
+        # don't echo to client who sent it
+        if clients[sock] != prefix[:-2]:
+            sock.send(bytes(prefix, "utf8")+msg)
+        else:
+            continue
 
 if __name__ == "__main__":
     serverSock.listen(5)

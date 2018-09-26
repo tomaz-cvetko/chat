@@ -17,8 +17,9 @@ def receiveFromServer():
     while not shutdownEvent.is_set():
         try:
             mutex.acquire()
+            # this blocks for timeout period, so it takes some time
             serverMsg = clientSock.recv(BUFSIZE).decode("utf8")
-            print(serverMsg)
+            print("\r"+serverMsg+"\n>$", end='')
             msgList.append(serverMsg)
             mutex.release()
             time.sleep(1)
@@ -30,9 +31,10 @@ def receiveFromServer():
 
 def sendInput():
     while not shutdownEvent.is_set():
+        # this blocks in one thread. if input is received,
+        # message is sent quickly -> socket is used for a short time
         my_msg = input(">$ ")
         mutex.acquire()
-        print("sending")
         msgList.append(my_msg)
         clientSock.send(bytes(my_msg, "utf8"))
         mutex.release()
@@ -40,7 +42,8 @@ def sendInput():
         if my_msg == "\quit":
             shutdownEvent.set()
         else:
-            time.sleep(0.1)
+            #time.sleep(0.1)
+            continue
 
 
 def startCommunication():
@@ -56,7 +59,7 @@ def startCommunication():
     print(serverMsg)
     msgList.append(serverMsg)
     
-    clientSock.settimeout(0.1)
+    clientSock.settimeout(0.05)
     
     receiveThread = Thread(target=receiveFromServer)
     receiveThread.start()
